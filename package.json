@@ -1,0 +1,22 @@
+{
+  "name": "bench-backburner",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "serve": "tsc && node dist/server.js",
+    "bench": "tsc && node dist/index.js"
+  },
+  "dependencies": {
+    "@types/node": "^7.0.8",
+    "@types/uglify-js": "^2.6.28",
+    "acorn": "^4.0.11",
+    "array-binsearch": "^1.0.1",
+    "chrome-tracing": "^0.4.1",
+    "estree-walker": "^0.3.1",
+    "har-remix": "^1.1.0",
+    "typescript": "^2.2.1",
+    "uglify-js": "^2.8.14"
+  }
+}
