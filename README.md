@@ -1,7 +1,6 @@
 # bench-backburner
 
 ## Installation
----
 
 ``` r
 # Install the Science Tap:
@@ -16,5 +15,4 @@ install.packages("ggplot2")
 ```
 
 ## Usage
----
 
