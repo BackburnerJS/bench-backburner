@@ -1,3 +1,4 @@
+import * as fs from "fs-extra";
 import { InitialRenderBenchmark, Runner } from "chrome-tracing";
 let browserOpts = process.env.CHROME_BIN ? {
   type: "exact",
@@ -17,7 +18,8 @@ let benchmarks = [
       { start: "mark_render_end", label: "lazy-render" },
       { start: "mark_lazy_render_end", label: "after-render"}
     ],
-    browser: browserOpts
+    browser: browserOpts,
+    runtimeStats: true
   }),
   new InitialRenderBenchmark({
     name: "control",
@@ -35,34 +37,20 @@ let benchmarks = [
         label: "lazy-render" },
       { start: "mark_lazy_render_end", label: "after-render"}
     ],
-    browser: browserOpts
+    browser: browserOpts,
+    runtimeStats: true
   })
 ];
-let runner = new Runner(benchmarks);
-runner.run(50).then((results) => {
-  let samplesCSV = "set,ms,type\n";
-  results.forEach(result => {
-    let set = result.set;
-    result.samples.forEach(sample => {
-      samplesCSV += set + "," + (sample.compile / 1000) + ",compile\n";
-      samplesCSV += set + "," + (sample.js / 1000) + ",js\n";
-      samplesCSV += set + "," + (sample.duration / 1000) + ",duration\n";
-    });
+
+fs.emptyDir('./results')
+  .then(()=> {
+    let runner = new Runner(benchmarks);
+    return runner.run(50);
+  })
+  .then((results) => {
+    fs.writeFileSync('results/results.json', JSON.stringify(results, null, 2));
+  })
+  .catch((err) => {
+    console.error(err.stack);
+    process.exit(1);
   });
-  let phasesCSV = "set,phase,ms,type\n";
-  results.forEach(result => {
-    let set = result.set;
-    result.samples.forEach(sample => {
-      sample.phaseSamples.forEach(phaseSample => {
-        phasesCSV += set + "," + phaseSample.phase + "," + (phaseSample.self / 1000) + ",self\n";
-        phasesCSV += set + "," + phaseSample.phase + "," + (phaseSample.cumulative / 1000) + ",cumulative\n";
-      });
-    });
-  });
-  require('fs').writeFileSync('results/samples.csv', samplesCSV);
-  require('fs').writeFileSync('results/phases.csv', phasesCSV);
-  require('fs').writeFileSync('results/results.json', JSON.stringify(results, null, 2));
-}).catch((err) => {
-  console.error(err.stack);
-  process.exit(1);
-});
