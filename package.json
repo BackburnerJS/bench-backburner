@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "serve": "tsc && node dist/server.js",
-    "bench": "tsc && node dist/index.js"
+    "bench": "tsc && node dist/index.js",
+    "plot": "plot ./results/results.json"
   },
   "dependencies": {
     "@types/node": "^9.4.0",

@@ -33,5 +33,5 @@ yarn serve
 yarn bench
 
 # Once the benchmark runner runs 50x (default) and completes launch the report
-./report.R
+yarn plot
 ```
