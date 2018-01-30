@@ -4,7 +4,7 @@
 
 ``` r
 # Install Node Modules:
-npm install
+yarn install
 
 # Install the Science Tap:
 brew tap homebrew/science
@@ -27,10 +27,10 @@ install.packages("ggplot2")
 
 ``` r
 # Launch the server
-npm run-script serve
+yarn serve
 
 # In a new terminal tab/window launch the benchmark
-npm run-script bench
+yarn bench
 
 # Once the benchmark runner runs 50x (default) and completes launch the report
 ./report.R
