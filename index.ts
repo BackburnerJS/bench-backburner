@@ -1,68 +1,72 @@
+import * as fs from "fs-extra";
 import { InitialRenderBenchmark, Runner } from "chrome-tracing";
+import * as networkEmulationConditions from 'network-emulation-conditions';
+
 let browserOpts = process.env.CHROME_BIN ? {
   type: "exact",
   executablePath: process.env.CHROME_BIN
 } : {
   type: "system"
 };
+const LIGHTHOUSE_CPU_THROTTLE = 1;// 4.5 is default for p90
+
+const settings = networkEmulationConditions['WIFI'];
+const networkConditions = {
+    offline: false,
+    latency: settings.latency,
+    uploadThroughput: settings.upload,
+    downloadThroughput: settings.download
+};
+const cpuThrottleRate = LIGHTHOUSE_CPU_THROTTLE;
+
+console.log({
+    networkConditions,
+    cpuThrottleRate
+});
+
 let benchmarks = [
   new InitialRenderBenchmark({
     name: "backburner",
     url: "http://localhost:8881/feed/?trace_redirect",
     markers: [// mark_app_end
-      { start: "domLoading", label: "load" },
+      { start: "navigationStart", label: "load" },
       { start: "mark_app_end", label: "boot" },
       { start: "mark_transition_start", label: "transition" },
       { start: "mark_render_start", label: "render" },
       { start: "mark_render_end", label: "lazy-render" },
       { start: "mark_lazy_render_end", label: "after-render"}
     ],
-    browser: browserOpts
+    browser: browserOpts,
+    networkConditions,
+    cpuThrottleRate
   }),
+
   new InitialRenderBenchmark({
     name: "control",
     url: "http://localhost:8880/feed/?trace_redirect",
-    markers: [
-      { start: "domLoading",
-        label: "load" },
-      { start: "mark_app_end",
-        label: "boot" },
-      { start: "mark_transition_start",
-        label: "transition" },
-      { start: "mark_render_start",
-        label: "render" },
-      { start: "mark_render_end",
-        label: "lazy-render" },
+    markers: [// mark_app_end
+      { start: "navigationStart", label: "load" },
+      { start: "mark_app_end", label: "boot" },
+      { start: "mark_transition_start", label: "transition" },
+      { start: "mark_render_start", label: "render" },
+      { start: "mark_render_end", label: "lazy-render" },
       { start: "mark_lazy_render_end", label: "after-render"}
     ],
-    browser: browserOpts
+    browser: browserOpts,
+    networkConditions,
+    cpuThrottleRate
   })
 ];
-let runner = new Runner(benchmarks);
-runner.run(50).then((results) => {
-  let samplesCSV = "set,ms,type\n";
-  results.forEach(result => {
-    let set = result.set;
-    result.samples.forEach(sample => {
-      samplesCSV += set + "," + (sample.compile / 1000) + ",compile\n";
-      samplesCSV += set + "," + (sample.js / 1000) + ",js\n";
-      samplesCSV += set + "," + (sample.duration / 1000) + ",duration\n";
-    });
+
+fs.emptyDir('./results')
+  .then(()=> {
+    let runner = new Runner(benchmarks);
+    return runner.run(50);
+  })
+  .then((results) => {
+    fs.writeFileSync('results/results.json', JSON.stringify(results, null, 2));
+  })
+  .catch((err) => {
+    console.error(err.stack);
+    process.exit(1);
   });
-  let phasesCSV = "set,phase,ms,type\n";
-  results.forEach(result => {
-    let set = result.set;
-    result.samples.forEach(sample => {
-      sample.phaseSamples.forEach(phaseSample => {
-        phasesCSV += set + "," + phaseSample.phase + "," + (phaseSample.self / 1000) + ",self\n";
-        phasesCSV += set + "," + phaseSample.phase + "," + (phaseSample.cumulative / 1000) + ",cumulative\n";
-      });
-    });
-  });
-  require('fs').writeFileSync('results/samples.csv', samplesCSV);
-  require('fs').writeFileSync('results/phases.csv', phasesCSV);
-  require('fs').writeFileSync('results/results.json', JSON.stringify(results, null, 2));
-}).catch((err) => {
-  console.error(err.stack);
-  process.exit(1);
-});
