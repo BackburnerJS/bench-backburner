@@ -15,6 +15,9 @@ brew install r
 # Install ggplot2:
 R
 install.packages("ggplot2")
+install.packages("R6")
+install.packages("jsonlite")
+
 ```
 
 ## Usage
